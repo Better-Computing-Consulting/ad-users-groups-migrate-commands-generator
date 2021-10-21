@@ -5,7 +5,7 @@ The utlity will generate these commands in order:
 
 First, New-ADOrganizationalUnit to make sure every user or group has its appropriate container.
 
-Then, New-ADUser followed by Set-ADUser to create and then assign the old domain email address to the new user.  In case email delivery will be migrated to the new organization as well.
+Then, New-ADUser followed by Set-ADUser to create and then assign the old domain email address to the new user as a secondary ProxyAddresse in case email delivery will be migrated to the new organization as well.
 
 Next, New-ADGroup followed by Add-ADGroupMember to create and add users to the same groups they used to be in the old organization.  The type and scope of the groups are maintained during migration.
 
