@@ -1,6 +1,6 @@
 Get-ADUser -Filter {enabled -eq $true} -properties * | ? {$_.mail -like "*source.org"} | `
     select Name, GivenName, SamAccountName, DisplayName, DistinguishedName, UserPrincipalName, `
-    Surname, OtherName, Initials, City, Company, Office, Department, Description, Title, EmailAddress | `
+    Surname, OtherName, Initials, City, State, Company, Country, Office, Department, Description, Title, EmailAddress | `
     Export-Csv -Path C:\temp\users.txt -Delimiter "`t" -NoTypeInformation
 
 $users = Get-ADUser -Filter {enabled -eq $true} -Properties name, mail | ? {$_.mail -like "*source.org"}

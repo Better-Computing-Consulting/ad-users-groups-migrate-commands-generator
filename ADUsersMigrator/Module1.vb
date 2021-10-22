@@ -77,14 +77,14 @@ Module Module1
     Function GetADUsers(UsersReport As String, newdomain As String) As List(Of ADUser)
         Dim ADUsers As New List(Of ADUser)
         Using sr As New StreamReader(UsersReport)
-            sr.ReadLine()
+            Dim reportheader As List(Of String) = sr.ReadLine().Split(vbTab).ToList
             Dim currentuser As New ADUser
             Console.Write("Processing users")
             While sr.Peek() >= 0
                 Dim s As String = sr.ReadLine
                 Dim u As ADUser
                 Do
-                    u = New ADUser(s, newdomain)
+                    u = New ADUser(s, newdomain, reportheader)
                 Loop While currentuser.AccountPassword = u.AccountPassword
                 Console.Write(".")
                 currentuser = u
@@ -96,8 +96,8 @@ Module Module1
     End Function
 End Module
 Class ADOrganizationalUnit
-    Private Name As String
-    Private Path As String
+    Private ReadOnly Name As String
+    Private ReadOnly Path As String
     Private ReadOnly qt As String = Chr(34)
     Public Sub New(sName As String, sPath As String)
         Name = qt & sName & qt
@@ -173,34 +173,34 @@ Class ADUser
     Public Properties As New List(Of ADUserProperty)
     Public Sub New()
     End Sub
-    Public Sub New(UserLine As String, newdomain As String)
+    Public Sub New(UserLine As String, newdomain As String, reportheader As List(Of String))
         Dim values As String() = UserLine.Split(vbTab)
-        Properties.Add(New ADUserProperty(" -Name ", values(0)))
-        Properties.Add(New ADUserProperty(" -GivenName ", values(1)))
-        SamAccountName = values(2)
-        Properties.Add(New ADUserProperty(" -SamAccountName ", SamAccountName))
-        DisplayName = values(3)
-        Properties.Add(New ADUserProperty(" -DisplayName ", DisplayName))
         Dim newdn As String = "DC=" & newdomain.Split(".")(0) & ",DC=" & newdomain.Split(".")(1)
-        Path = qt & Mid(values(4), values(4).IndexOf("OU=") + 1, values(4).IndexOf("DC=") - values(4).IndexOf("OU=")) & newdn & qt
-        Properties.Add(New ADUserProperty(" -Path ", Path))
-        UserPrincipalName = values(5).Substring(0, values(5).IndexOf("@") + 1) & newdomain & qt
-        Properties.Add(New ADUserProperty(" -UserPrincipalName ", UserPrincipalName))
-        Properties.Add(New ADUserProperty(" -AccountPassword ", "(ConvertTo-SecureString " & "'" & AccountPassword & "'" & " -AsPlainText -Force)"))
-        Properties.Add(New ADUserProperty(" -State ", qt & "California" & qt))
-        Properties.Add(New ADUserProperty(" -Country ", qt & "US" & qt))
-        Properties.Add(New ADUserProperty(" -Enabled ", "$true"))
-        Properties.Add(New ADUserProperty(" -Surname ", values(6)))
-        Properties.Add(New ADUserProperty(" -OtherName ", values(7)))
-        Properties.Add(New ADUserProperty(" -Initials ", values(8)))
-        Properties.Add(New ADUserProperty(" -City ", values(9)))
-        Properties.Add(New ADUserProperty(" -Company ", values(10)))
-        Properties.Add(New ADUserProperty(" -Office ", values(11)))
-        Properties.Add(New ADUserProperty(" -Department ", values(12)))
-        Properties.Add(New ADUserProperty(" -Description ", values(13)))
-        Properties.Add(New ADUserProperty(" -Title ", values(14)))
-        OldEmail = values(15)
-        Properties.Add(New ADUserProperty(" -EmailAddress ", UserPrincipalName))
+        Dim i As Integer = 0
+        For Each h As String In reportheader
+            Select Case h.Trim(CChar(qt))
+                Case "SamAccountName"
+                    SamAccountName = values(i)
+                    Properties.Add(New ADUserProperty(reportheader(i), SamAccountName))
+                Case "DisplayName"
+                    DisplayName = values(i)
+                    Properties.Add(New ADUserProperty(reportheader(i), DisplayName))
+                Case "DistinguishedName"
+                    Path = qt & Mid(values(i), values(i).IndexOf("OU=") + 1, values(i).IndexOf("DC=") - values(i).IndexOf("OU=")) & newdn & qt
+                    Properties.Add(New ADUserProperty("Path", Path))
+                Case "UserPrincipalName"
+                    UserPrincipalName = values(i).Substring(0, values(i).IndexOf("@") + 1) & newdomain & qt
+                    Properties.Add(New ADUserProperty(reportheader(i), UserPrincipalName))
+                Case "EmailAddress"
+                    OldEmail = values(i)
+                    Properties.Add(New ADUserProperty(reportheader(i), UserPrincipalName))
+                Case Else
+                    Properties.Add(New ADUserProperty(reportheader(i), values(i)))
+            End Select
+            i += 1
+        Next
+        Properties.Add(New ADUserProperty("AccountPassword", "(ConvertTo-SecureString " & "'" & AccountPassword & "'" & " -AsPlainText -Force)"))
+        Properties.Add(New ADUserProperty("Enabled", "$true"))
     End Sub
     ReadOnly Property NewSetADUserCMDs As String
         Get
@@ -248,8 +248,9 @@ End Class
 Class ADUserProperty
     Public Name As String
     Public Value As String
+    Private ReadOnly qt As String = Chr(34)
     Public Sub New(inName As String, inValue As String)
-        Name = inName
+        Name = " -" & inName.Trim(CChar(qt)) & " "
         Value = inValue
     End Sub
     ReadOnly Property IsSet As Boolean
