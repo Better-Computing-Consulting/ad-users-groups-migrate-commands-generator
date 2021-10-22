@@ -1,8 +1,8 @@
 ﻿Imports System.IO
 Module Module1
     Sub Main()
-        Dim ADGroupsReport As String = "C:\temp\admigrate\groups.txt"
-        Dim ADUsersReport As String = "C:\temp\admigrate\users.txt"
+        Dim ADUsersReport As String = "C:\temp\users.txt"
+        Dim ADGroupsReport As String = "C:\temp\groups.txt"
         Dim NewDomainName As String = "destination.org"
         Dim ADGroups As List(Of ADGroup) = GetADGroups(ADGroupsReport, NewDomainName)
         Dim ADUsers As List(Of ADUser) = GetADUsers(ADUsersReport, NewDomainName)
