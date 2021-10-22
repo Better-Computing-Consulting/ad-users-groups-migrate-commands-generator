@@ -29,6 +29,41 @@ Module Module1
         Process.Start("notepad.exe", workingdir & "adcommands.txt")
         Process.Start("excel.exe", workingdir & "migratedusers.csv")
     End Sub
+    Function GetADGroups(reportpath As String, newdomain As String) As List(Of ADGroup)
+        Dim ADGroups As New List(Of ADGroup)
+        Using sr As New StreamReader(reportpath)
+            While sr.Peek() >= 0
+                Dim s As String = sr.ReadLine
+                Dim aGroup As New ADGroup(s, newdomain)
+                If Not ADGroups.Contains(aGroup) Then
+                    ADGroups.Add(aGroup)
+                Else
+                    Dim i As Integer = ADGroups.IndexOf(aGroup)
+                    ADGroups.Item(i).Members.Add(aGroup.Members(0))
+                End If
+            End While
+        End Using
+        Return ADGroups
+    End Function
+    Function GetADUsers(UsersReport As String, newdomain As String) As List(Of ADUser)
+        Dim ADUsers As New List(Of ADUser)
+        Using sr As New StreamReader(UsersReport)
+            Dim reportheader As List(Of String) = sr.ReadLine().Split(vbTab).ToList
+            Dim currentuser As New ADUser
+            Console.Write("Processing users")
+            While sr.Peek() >= 0
+                Dim s As String = sr.ReadLine
+                Dim u As ADUser
+                Do
+                    u = New ADUser(s, newdomain, reportheader)
+                Loop While currentuser.AccountPassword = u.AccountPassword
+                Console.Write(".")
+                currentuser = u
+                ADUsers.Add(u)
+            End While
+        End Using
+        Return ADUsers
+    End Function
     Function GetADOrganizationalUnits(ADUsers As List(Of ADUser), ADGroups As List(Of ADGroup), newdomain As String) As List(Of ADOrganizationalUnit)
         Dim ADOrganizationalUnits As New List(Of ADOrganizationalUnit)
         Dim OUs As New List(Of String)
@@ -56,44 +91,7 @@ Module Module1
         ADOrganizationalUnits.Sort(Function(x, y) x.PathLengh.CompareTo(y.PathLengh))
         Return ADOrganizationalUnits
     End Function
-    Function GetADGroups(reportpath As String, newdomain As String) As List(Of ADGroup)
-        Dim ADGroups As New List(Of ADGroup)
-        Using sr As New StreamReader(reportpath)
-            While sr.Peek() >= 0
-                Dim s As String = sr.ReadLine
-                Dim aGroup As New ADGroup(s, newdomain)
-                If Not ADGroups.Contains(aGroup) Then
-                    ADGroups.Add(aGroup)
-                Else
-                    Dim i As Integer = ADGroups.IndexOf(aGroup)
-                    If Not ADGroups.Item(i).Members.Contains(aGroup.Members(0)) Then
-                        ADGroups.Item(i).Members.Add(aGroup.Members(0))
-                    End If
-                End If
-            End While
-        End Using
-        Return ADGroups
-    End Function
-    Function GetADUsers(UsersReport As String, newdomain As String) As List(Of ADUser)
-        Dim ADUsers As New List(Of ADUser)
-        Using sr As New StreamReader(UsersReport)
-            Dim reportheader As List(Of String) = sr.ReadLine().Split(vbTab).ToList
-            Dim currentuser As New ADUser
-            Console.Write("Processing users")
-            While sr.Peek() >= 0
-                Dim s As String = sr.ReadLine
-                Dim u As ADUser
-                Do
-                    u = New ADUser(s, newdomain, reportheader)
-                Loop While currentuser.AccountPassword = u.AccountPassword
-                Console.Write(".")
-                currentuser = u
-                ADUsers.Add(u)
-            End While
-        End Using
-        Console.WriteLine()
-        Return ADUsers
-    End Function
+
 End Module
 Class ADOrganizationalUnit
     Private ReadOnly Name As String
@@ -124,10 +122,9 @@ Class ADOrganizationalUnit
 End Class
 Class ADGroup
     Private Name As String
-    'Private DistinguishedName As String
     Public Path As String
-    Private GroupCategory As String
-    Private GroupScope As String
+    Private ReadOnly GroupCategory As String
+    Private ReadOnly GroupScope As String
     Public Members As New List(Of String)
     Private ReadOnly qt As String = Chr(34)
     Public Sub New(GroupLine As String, newdomain As String)
