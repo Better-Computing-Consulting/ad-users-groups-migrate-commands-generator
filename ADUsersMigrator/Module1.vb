@@ -8,22 +8,22 @@ Module Module1
         Dim ADUsers As List(Of ADUser) = GetADUsers(ADUsersReport, NewDomainName)
         Dim ADOrganizationalUnits As List(Of ADOrganizationalUnit) = GetADOrganizationalUnits(ADUsers, ADGroups, NewDomainName)
         Dim workingdir As String = Path.GetDirectoryName(ADGroupsReport) & "\"
-        Using sw As New StreamWriter(workingdir & "adcommands.txt")
-            sw.AutoFlush = True
+        Using cmds As New StreamWriter(workingdir & "adcommands.txt")
+            cmds.AutoFlush = True
             For Each ou As ADOrganizationalUnit In ADOrganizationalUnits
-                sw.WriteLine(ou.NewADOrganizationalUnitCMD)
+                cmds.WriteLine(ou.NewADOrganizationalUnitCMD)
             Next
             Using rpt As New StreamWriter(workingdir & "migratedusers.csv")
                 rpt.AutoFlush = True
                 rpt.WriteLine("DisplayName,SamAccountName,UserPrincipalName,AccountPassword")
                 For Each u As ADUser In ADUsers
-                    sw.WriteLine(u.NewSetADUserCMDs)
+                    cmds.WriteLine(u.NewSetADUserCMDs)
                     rpt.WriteLine(u.ReportLine)
                 Next
             End Using
             For Each g As ADGroup In ADGroups
-                sw.WriteLine(g.NewADGroupCMD)
-                sw.WriteLine(g.AddGroupMemeberCMDs)
+                cmds.WriteLine(g.NewADGroupCMD)
+                cmds.WriteLine(g.AddGroupMemeberCMDs)
             Next
         End Using
         Process.Start("notepad.exe", workingdir & "adcommands.txt")
@@ -91,7 +91,6 @@ Module Module1
         ADOrganizationalUnits.Sort(Function(x, y) x.PathLengh.CompareTo(y.PathLengh))
         Return ADOrganizationalUnits
     End Function
-
 End Module
 Class ADOrganizationalUnit
     Private ReadOnly Name As String
