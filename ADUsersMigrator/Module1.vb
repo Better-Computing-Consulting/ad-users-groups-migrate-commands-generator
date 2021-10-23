@@ -29,9 +29,9 @@ Module Module1
         Process.Start("notepad.exe", workingdir & "adcommands.txt")
         Process.Start("excel.exe", workingdir & "migratedusers.csv")
     End Sub
-    Function GetADGroups(reportpath As String, newdomain As String) As List(Of ADGroup)
+    Function GetADGroups(GroupsReport As String, newdomain As String) As List(Of ADGroup)
         Dim ADGroups As New List(Of ADGroup)
-        Using sr As New StreamReader(reportpath)
+        Using sr As New StreamReader(GroupsReport)
             While sr.Peek() >= 0
                 Dim s As String = sr.ReadLine
                 Dim aGroup As New ADGroup(s, newdomain)
@@ -120,7 +120,7 @@ Class ADOrganizationalUnit
     End Function
 End Class
 Class ADGroup
-    Private Name As String
+    Private ReadOnly Name As String
     Public Path As String
     Private ReadOnly GroupCategory As String
     Private ReadOnly GroupScope As String
