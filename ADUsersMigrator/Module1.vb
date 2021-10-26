@@ -251,11 +251,7 @@ Class ADUserProperty
     End Sub
     ReadOnly Property IsSet As Boolean
         Get
-            If Value.Trim.Length > 0 Then
-                Return True
-            Else
-                Return False
-            End If
+            If Value.Trim.Length > 0 Then Return True Else Return False
         End Get
     End Property
 End Class
