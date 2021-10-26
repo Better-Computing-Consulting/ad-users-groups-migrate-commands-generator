@@ -127,8 +127,8 @@ Class ADGroup
     Public Members As New List(Of String)
     Private ReadOnly qt As String = Chr(34)
     Public Sub New(GroupLine As String, newdomain As String)
-        Dim newdn As String = "DC=" & newdomain.Split(".")(0) & ",DC=" & newdomain.Split(".")(1)
         Dim values As String() = GroupLine.Split(vbTab)
+        Dim newdn As String = "DC=" & newdomain.Split(".")(0) & ",DC=" & newdomain.Split(".")(1)
         Members.Add(qt & values(0).Substring(0, values(0).IndexOf("DC=")) & newdn & qt)
         Name = values(1)
         Path = qt & Mid(values(2), values(2).IndexOf("OU=") + 1, values(2).IndexOf("DC=") - values(2).IndexOf("OU=")) & newdn & qt
