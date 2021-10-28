@@ -12,3 +12,14 @@ Next, New-ADGroup followed by Add-ADGroupMember to create and add users to the s
 Some users do not have all their properties set, so the program keeps track of the properties without values and only includes the properties that have values in the New-ADUser user commands it generates.
 
 The Reports.ps1 file contains the commands needed to produce the reports in the format the program is expecting.  The filter in the commands can be varied to accommodate different migration requirements.
+
+There is a blog I gives an overall description on how the program works, and then goes into detail of some aspects of the program that helps ensure the Users and Groups are created in the destination domain without errors, such as handling the empty user properties and creating the Organizational Units (OU) that contain them.
+
+https://bcc.bz/post/active-directory-powershell-module-users-and-groups-migration-commands-generator
+
+There is also a YouTube video that demonstrates the utility:
+
+https://youtu.be/84bkEqmduUQ
+
+
+:smiley:
